@@ -10,6 +10,9 @@ public enum RoleEnum {
   private String role;
 
   RoleEnum(String role) {
+
     this.role = role;
+
   }
+
 }

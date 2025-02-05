@@ -1,4 +1,4 @@
-package com.PizzaJB.services.implement;
+package com.PizzaJB.services.imp;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -10,16 +10,17 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.PizzaJB.dto.AuthDto;
-import com.PizzaJB.entity.UsersModel;
+import com.PizzaJB.entity.UserModel;
 import com.PizzaJB.repository.UserRepository;
 import com.PizzaJB.services.AuthenticationService;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.exceptions.JWTDecodeException;
+import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 
 @Service
 public class AuthenticationServiceImp implements AuthenticationService {
+
   private final String SECRET_KEY = "juniordossantos";
 
   @Autowired
@@ -32,25 +33,25 @@ public class AuthenticationServiceImp implements AuthenticationService {
 
   @Override
   public String getTokenJwt(AuthDto authDto) {
-    UsersModel user = userRepository.findByEmail(authDto.email());
+    UserModel user = userRepository.findByEmail(authDto.email());
     return gerateToken(user);
   }
 
-  public String gerateToken(UsersModel usersModel) {
+  public String gerateToken(UserModel userModel) {
     try {
       Algorithm algorithm = Algorithm.HMAC256(SECRET_KEY);
       return JWT.create()
           .withIssuer("PizzaJB")
-          .withSubject(usersModel.getEmail())
+          .withSubject(userModel.getEmail())
           .withExpiresAt(gerateDateExp())
           .sign(algorithm);
-    } catch (JWTDecodeException e) {
-      throw new RuntimeException("Err in gerate of token" + e.getMessage());
+
+    } catch (JWTCreationException e) {
+      throw new RuntimeException("Erro na geracao do Token" + e.getMessage());
     }
 
   }
 
-  @Override
   public String validateToken(String token) {
     try {
       Algorithm algorithm = Algorithm.HMAC256(SECRET_KEY);
@@ -67,4 +68,5 @@ public class AuthenticationServiceImp implements AuthenticationService {
   private Instant gerateDateExp() {
     return LocalDateTime.now().plusHours(4).toInstant(ZoneOffset.of("-03:00"));
   }
+
 }

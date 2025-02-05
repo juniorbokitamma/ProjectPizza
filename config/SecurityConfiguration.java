@@ -21,29 +21,48 @@ public class SecurityConfiguration {
   @Autowired
   private SecurityFilter securityFilter;
 
+  private final CustomCorsConfiguration customCorsConfiguration;
+
+  @Autowired
+  public SecurityConfiguration(CustomCorsConfiguration customCorsConfiguration) {
+    this.customCorsConfiguration = customCorsConfiguration;
+  }
+
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-    return httpSecurity.csrf(csrf -> csrf.disable())
+    return httpSecurity
+        .cors(cors -> cors.configurationSource(customCorsConfiguration))
+        .csrf(csrf -> csrf.disable())
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(authorize -> authorize
-            .requestMatchers(HttpMethod.GET, "/admin").hasRole("ADMIN")
-            .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
+            .requestMatchers(HttpMethod.POST, "/pizza").hasRole("ADMIN")
+            .requestMatchers(HttpMethod.PUT, "/pizza").hasRole("ADMIN")
+
+            .requestMatchers(HttpMethod.GET, "/pizza").permitAll()
+
+            .requestMatchers(HttpMethod.PUT, "/orders").hasRole("ADMIN")
+            .requestMatchers(HttpMethod.POST, "/orders").permitAll()
+            .requestMatchers(HttpMethod.GET, "/orders").permitAll()
+            .requestMatchers(HttpMethod.DELETE, "/orders").permitAll()
+
             .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
+            .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
             .anyRequest().authenticated())
         .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
         .build();
-
   }
 
   @Bean
-  public PasswordEncoder passwordEncoder() {
+  public PasswordEncoder passwordEncode() {
     return new BCryptPasswordEncoder();
+
   }
 
   @Bean
-  AuthenticationManager authenticationManager(
+  public AuthenticationManager authenticatorManager(
       AuthenticationConfiguration authenticationConfiguration) throws Exception {
     return authenticationConfiguration.getAuthenticationManager();
+
   }
 
 }
